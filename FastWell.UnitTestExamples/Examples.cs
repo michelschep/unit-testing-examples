@@ -165,5 +165,65 @@ namespace FastWell.UnitTestExamples
             // Assert
             actual.Should().Be(z);
         }
+        
+        [Fact]
+        public void MockDependecyAndDontCareAboutMock()
+        {
+            // Arrange
+            var mock = new Mock<IDoSomething>();
+            var sut = new SomeComponent(mock.Object);
+
+            // Act
+            var actual = sut.DoSomething();
+
+            // Assert
+            actual.Should().Be(42);
+        }
+
+        [Fact]
+        public void MockDependecyAndDoCareAboutMock()
+        {
+            // Arrange
+            var mock = new Mock<IDoSomething>();
+            mock.Setup(x=>x.DoSomething(42)).Returns(1337);
+
+            var sut = new SomeComponent(mock.Object);
+
+            // Act
+            var actual = sut.DoSomething();
+
+            // Assert
+            actual.Should().Be(42);
+            mock.Verify(x=>x.DoSomething(42));
+        }
+    }
+    
+     public class SomeComponent
+    {
+        private readonly IDoSomething _someOtherComponent;
+
+        public SomeComponent(IDoSomething someOtherComponent)
+        {
+            _someOtherComponent = someOtherComponent ?? throw new ArgumentNullException(nameof(someOtherComponent));
+        }
+
+        public int DoSomething()
+        {
+            var doSomething = _someOtherComponent.DoSomething(42);
+            return 42;
+        }
+    }
+
+    public interface IDoSomething
+    {
+        int DoSomething(int x);
+    }
+
+    public class SomeOtherComponent : IDoSomething
+    {
+        public int DoSomething(int x)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
